@@ -9,7 +9,7 @@ Part of [`code-samples`](../README.md).
 
 ## Stack
 
-- **Backend:** Python 3.10, Django 4.1, Django REST Framework, SQLite
+- **Backend:** Python 3.12, Django 5.2, Django REST Framework, SQLite
 - **Frontend:** React 18, MUI 5, axios, React Router 6
 
 ## Screenshots

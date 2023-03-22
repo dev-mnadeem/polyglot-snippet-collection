@@ -2,6 +2,7 @@ from .account_utility_tests import (
     EnrichmentDisabledTests,
     EnrichmentEnabledTests,
     TokenTests,
+    TokenBoundaryTests,
     ValidationTests,
 )
 from .post_tests import (
@@ -21,6 +22,7 @@ __all__ = [
     "PostListTests",
     "PostUpdateDeleteTests",
     "TokenTests",
+    "TokenBoundaryTests",
     "UserCreationTests",
     "UserDetailTests",
     "ValidationTests",

@@ -5,7 +5,7 @@ every endpoint below is in [`docs/api-walkthrough.md`](../docs/api-walkthrough.m
 
 # Requirements
 
-Python 3.8-3.10 (Django 4.0 does not support 3.11+).
+Python 3.12 with Django 5.2 LTS.
 
 # Setup
 

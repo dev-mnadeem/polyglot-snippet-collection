@@ -14,7 +14,6 @@ import os
 import jwt
 import requests
 from django.conf import settings
-from rest_framework_jwt.utils import jwt_payload_handler
 
 from tradecore_api.models import Post, User
 
@@ -126,15 +125,11 @@ class AccountUtility:
 
     @classmethod
     def get_token(cls, user):
-        """Return a signed JWT for the given user as a ``str``.
-
-        PyJWT 1.x returns ``bytes`` from ``encode`` while 2.x returns ``str``.
-        Normalising here keeps callers (and the JSON response) independent of
-        which version is installed.
-        """
-        payload = jwt_payload_handler(user)
-        token = jwt.encode(payload, _jwt_secret())
-        return token.decode("utf-8") if isinstance(token, bytes) else token
+        """Issue a bounded token using an explicit signing algorithm."""
+        now = datetime.datetime.now(datetime.timezone.utc)
+        payload = {"user_id": user.pk, "email": user.email, "iat": now,
+                   "exp": now + settings.JWT_AUTH["JWT_EXPIRATION_DELTA"]}
+        return jwt.encode(payload, _jwt_secret(), algorithm=JWT_ALGORITHM)
 
     @classmethod
     def get_user_data(cls, authorization_header):
@@ -145,7 +140,7 @@ class AccountUtility:
         if len(parts) != 2 or parts[0].upper() != "JWT":
             return None
         try:
-            user_data = jwt.decode(parts[1], _jwt_secret())
+            user_data = jwt.decode(parts[1], _jwt_secret(), algorithms=[JWT_ALGORITHM], options={"require": ["exp", "iat", "email"]})
             return User.objects.get(email=user_data["email"])
         except (jwt.InvalidTokenError, User.DoesNotExist, KeyError):
             return None

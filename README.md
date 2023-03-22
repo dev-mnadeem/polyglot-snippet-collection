@@ -7,11 +7,12 @@ document. Pick a directory, follow its own README, run it on its own.
 
 | Sample | One line | Behind the HTTP layer | Tests |
 |---|---|---|---|
-| [`TradeCore/`](TradeCore/tradecore) | JWT-authenticated social API — signup, login, posts, likes | PyJWT, a custom `User` manager, optional signup enrichment | 48 |
+| [`TradeCore/`](TradeCore/tradecore) | JWT-authenticated social API — signup, login, posts, likes | PyJWT, a custom `User` manager, optional signup enrichment | 51 |
 | [`aviyel/`](aviyel/aviyel_api) | Collect YouTube search results for a keyword, then analyse the CSV | YouTube Data API v3 client + a pure-pandas stats module | 27 |
 | [`notification-app/`](notification-app) | Post one message to a category, get one delivery row per subscriber per channel | Subclass-discovery dispatcher registry, React 18 + MUI front-end | 21 + 14 |
 
-Python 3.10 runs all three (Django 4.0 in the first two does not support 3.11+).
+All three backends are verified on Python 3.12 and Django 5.2.18. Each has its own
+`requirements.in` and resolved `requirements.txt`; install them in separate environments.
 Every sample starts with **no API keys set** and no test makes a network call.
 
 ---
@@ -24,11 +25,11 @@ geolocation and whether the date is a public holiday.
 
 ```bash
 cd TradeCore/tradecore
-python3.10 -m venv .venv && source .venv/bin/activate
+python3.12 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver        # routes under http://localhost:8000/api
-python manage.py test             # 48 tests
+python manage.py test             # 51 tests
 ```
 
 Routes (no trailing slashes): `POST /api/signup`, `POST /api/login`,
@@ -64,7 +65,7 @@ analysis does not.
 
 ```bash
 cd aviyel/aviyel_api
-python3.10 -m venv .venv && source .venv/bin/activate
+python3.12 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver
@@ -113,7 +114,7 @@ provider behind it.
 ```bash
 # terminal 1 — API
 cd notification-app/notificationAPI
-python3.10 -m venv .venv && source .venv/bin/activate
+python3.12 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py seed_demo --messages 4    # channels, categories, 3 users, data
@@ -190,15 +191,31 @@ pycodestyle .
 
 ## What is not here
 
-- **No CI.** The four suites above are run by hand.
+- **The CI suites use offline fixtures.** They do not verify production provider credentials or live delivery.
 - **SQLite and `runserver` everywhere.** These are reading samples, not
   deployments.
 - **No queue.** The notification fan-out happens synchronously inside the
   request. Fine at demo scale, wrong for real delivery.
 - **`aviyel` loads the whole CSV into memory.** Fine for hundreds of rows.
-- **TradeCore pins PyJWT 1.7.1 and `djangorestframework-jwt`**, both
-  unmaintained. Upgrading would change the token format and the documented API
-  contract, so the pins stand. (`djangorestframework-simplejwt` is installed but
-  unused.)
+- **TradeCore tokens use PyJWT 2 with explicit HS256 verification and required expiry.**
+  The HTTP `JWT <token>` header contract is retained. Three regressions reject expired,
+  missing-expiry and alternate-algorithm tokens.
 - **No AI features and no added product features.** Each sample answers its
   original brief; anything more would make it harder to assess, not easier.
+
+## Independent data paths
+
+```mermaid
+flowchart LR
+  T[TradeCore HTTP requests] --> A[Account and post services]
+  A --> TS[(TradeCore SQLite)]
+  Y[YouTube collection request] --> YC[Provider client]
+  YC --> CSV[Input CSV]
+  CSV --> Stats[Pure pandas statistics]
+  Stats --> Reports[Report CSVs]
+  N[Notification request] --> Fanout[Transactional dispatcher]
+  Fanout --> NS[(Separate notification SQLite)]
+```
+
+The provider clients are mocked in tests; no paid provider calls are required.
+The notification browser build remains on Node 22 and is checked separately.

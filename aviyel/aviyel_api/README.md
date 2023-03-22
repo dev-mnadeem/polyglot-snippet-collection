@@ -5,7 +5,7 @@ Part of [`code-samples`](../../README.md). A captured run with real output is in
 
 # Requirements
 
-Python 3.8-3.10 (Django 4.0 does not support 3.11+).
+Python 3.12 with Django 5.2 LTS.
 
 # Setup
 
