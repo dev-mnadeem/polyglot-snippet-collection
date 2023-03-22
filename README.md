@@ -219,3 +219,7 @@ flowchart LR
 
 The provider clients are mocked in tests; no paid provider calls are required.
 The notification browser build remains on Node 22 and is checked separately.
+
+## Author
+
+[**Muhammad Nadeem**](https://github.com/dev-mnadeem)
